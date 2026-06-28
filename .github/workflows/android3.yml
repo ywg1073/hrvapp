@@ -1,0 +1,27 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unzip Source Code
+        run: unzip -o hrv-monitor.zip
+
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 💥 终极破门：不用 gradlew，直接用云端自带的全局 gradle 强行编译！
+      - name: Build with system Gradle
+        run: gradle assembleDebug
