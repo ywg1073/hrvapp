@@ -22,6 +22,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # 💥 终极破门：不用 gradlew，直接用云端自带的全局 gradle 强行编译！
+      # 💥 终极物理作弊：既然你非要 debug.keystore，我就当场用 keytool 给你捏造一个标准的放进去！
+      - name: Forge Debug Keystore
+        run: |
+          mkdir -p app
+          keytool -genkey -v -keystore app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
+      # 拿上伪造的通行证，带上无头环境保命符，正常敲门打包！
       - name: Build with system Gradle
-        run: gradle assembleDebug
+        run: gradle assembleDebug --no-daemon -Djava.awt.headless=true
