@@ -1,0 +1,41 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unzip Source Code
+        run: unzip -o hrv-monitor.zip
+
+      # 💡 核心对齐：因为你的 build.gradle 在 app 文件夹里，我们用自动提层，把所有源码提取到根目录
+      - name: Move project files to root
+        run: |
+          SUBDIR=$(find . -maxdepth 2 -name "app" -exec dirname {} \;)
+          if [ ! -z "$SUBDIR" ] && [ "$SUBDIR" != "." ]; then
+            echo "发现嵌套子文件夹: $SUBDIR，移至根目录..."
+            cp -r $SUBDIR/* .
+          fi
+
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      # 给刚才我们手动配的钥匙赋予运行权限
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # 正式开始编译 APK
+      - name: Build with Gradle
+        run: ./gradlew assembleDebug
