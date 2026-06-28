@@ -11,14 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. 必须先进入你的 GitHub 仓库目录
       - uses: actions/checkout@v4
 
-      # 2. 在仓库目录内解压你的 zip 包（注意名字要和上传的 zip 完全一致）
       - name: Unzip Source Code
         run: unzip -o hrv-monitor.zip
 
-      # 3. 配置 Java/JDK 环境
+      # 💡 核心修正：自动寻找下一层目录中的 gradlew，并将其强行提到最外层根目录下
+      - name: Move project files to root
+        run: |
+          SUBDIR=$(find . -maxdepth 2 -name "gradlew" -exec dirname {} \;)
+          if [ ! -z "$SUBDIR" ] && [ "$SUBDIR" != "." ]; then
+            echo "发现嵌套子文件夹: $SUBDIR，正在同步移至根目录..."
+            cp -r $SUBDIR/* .
+          fi
+
       - name: set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -26,10 +32,8 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # 4. 给 Gradle 赋予执行权限
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 5. 执行正式编译（改成 assembleDebug 速度更快，且只输出可用安装包）
       - name: Build with Gradle
         run: ./gradlew assembleDebug
