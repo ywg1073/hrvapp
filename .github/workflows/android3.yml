@@ -22,12 +22,17 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # 💥 终极物理作弊：既然你非要 debug.keystore，我就当场用 keytool 给你捏造一个标准的放进去！
+      # 1. 依然保留伪造签名，防止它卡在下一步
       - name: Forge Debug Keystore
         run: |
           mkdir -p app
           keytool -genkey -v -keystore app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
-      # 拿上伪造的通行证，带上无头环境保命符，正常敲门打包！
+      # 2. 💥 终极死命令：关闭守护进程、关闭并行、限制单核、声明无屏幕，老老实实单线走完！
       - name: Build with system Gradle
-        run: gradle assembleDebug --no-daemon -Djava.awt.headless=true
+        run: |
+          gradle assembleDebug \
+            --no-daemon \
+            --no-parallel \
+            --max-workers=1 \
+            -Djava.awt.headless=true
